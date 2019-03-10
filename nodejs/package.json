@@ -1,0 +1,21 @@
+{
+  "name": "rtc-map-sharing",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bootstrap": "^3.3.6",
+    "connect": "^3.6.0",
+    "easyrtc": "^1.1.0",
+    "express": "^4.14.1",
+    "forever": "^0.15.3",
+    "fs": "0.0.2",
+    "http": "0.0.0",
+    "redis": "^2.6.5",
+    "socket.io": "^1.7.3",
+    "util": "^0.10.3",
+    "ws": "^1.1.4"
+  }
+}

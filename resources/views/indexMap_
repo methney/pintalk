@@ -1,0 +1,986 @@
+<?php
+    include 'head.php';
+
+    // url로 직접 초대 
+    $pin = isset($pin_id)?$pin_id:'';
+    $lat = isset($lat)?$lat:'';
+    $lng = isset($lng)?$lng:'';
+?>
+<script>
+$(function(){
+
+    $("#chatFrm_room_id").val("<?= Input::get('room_id')?>");
+    $("#chatFrm_subscriber").val("<?= Input::get('subscriber')?>");
+    $("#chatFrm_pin_id").val("<?= Input::get('pin_id')?>");
+
+    // invite with url 
+    if('<?=isset($direct_access)?>'){
+        quickView('<?=$pin?>');
+    }
+
+});
+
+</script>
+<html lang="en-US"> 
+<head>
+    <!--<meta charset="UTF-8"/>-->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8;" charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotter - Universal Directory Listing</title>
+</head>
+
+<body onunload="" class="map-fullscreen page-homepage navigation-off-canvas" id="page-top">
+<!-- Outer Wrapper-->
+<div id="outer-wrapper">
+    <!-- Inner Wrapper -->
+    <div id="inner-wrapper">
+        <!-- Navigation-->
+        <?php include 'top.php'; ?>
+        <!-- end Navigation-->
+        <!-- Page Canvas-->
+        <div id="page-canvas">
+            <!--Off Canvas Navigation-->
+            <nav class="off-canvas-navigation">
+                <header>Navigation</header>
+                <div class="main-navigation navigation-off-canvas" id="navi_list">
+                </div>
+            </nav>
+            <!--end Off Canvas Navigation-->
+            <!--Page Content-->
+            <div id="page-content">
+            <!-- Map Canvas-->
+            <div class="map-canvas list-width-30">
+                <!-- Map -->
+                <div class="map">
+                    <div class="toggle-navigation">
+                        <div class="icon">
+                            <div class="line"></div>
+                            <div class="line"></div>
+                            <div class="line"></div>
+                        </div>
+                    </div>
+                    <!--/.toggle-navigation-->
+                    <div id="map" class="has-parallax"></div>
+                    <!--/#map-->
+                    <div class="search-bar horizontal">
+                        <form class="main-search border-less-inputs" role="form" id="searchFrm" method="post">
+                            <div class="input-row">
+                                <!-- /.form-group -->
+                                <div class="form-group">
+                                    <div class="input-group location">
+                                        <input type="text" class="form-control" id="location" placeholder="Enter Location">
+                                        <span class="input-group-addon"><i class="fa fa-map-marker geolocation" data-toggle="tooltip" data-placement="bottom" title="Find my position"></i></span>
+                                    </div>
+                                </div>
+                                <!-- /.form-group -->
+                                <div class="form-group">
+                                    <select name="category" id="mapCategory" multiple title="Select Category" data-live-search="true">
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="keyword" placeholder="Enter Keyword">
+                                </div>
+                                <!-- /.form-group -->
+                                <div class="form-group">
+                                    <button type="button" id="searchBtn" class="btn btn-default"><i class="fa fa-search"></i></button>
+                                </div>
+                                <!-- /.form-group -->
+                            </div>
+                            <!-- /.input-row -->
+                        </form>
+                        <!-- /.main-search -->
+                    </div>
+                    <!-- /.search-bar -->
+                </div>
+                <!-- end Map -->
+                <!--Items List-->
+                <div class="items-list scrollbar-inner">
+                    <div class="inner">
+                        <header>
+                            <h3>Results</h3>
+                        </header>
+                        <ul class="results list"></ul>
+                    </div>
+                    <!--results-->
+                </div>
+                <!--end Items List-->
+                <!--Chatting window-->
+                <div class="chatting-window" id="chatting-window">
+                    <div class="inner">
+                        <header>
+                            <h3>Chatting!</h3>
+                        </header>
+                        <div class="chatting-div">
+                            <div class="chatting-section">
+                                <div id="videoContainer">
+                                    <div id="connectControls" style="height:0px;">
+                                        <div id="iam" style="display:none">Not yet connected...</div>
+                                        <div id="otherClients" style="display:none"></div>
+                                    </div>
+                                    <div id="videos">
+                                        <div class="selfDiv">
+                                            <video autoplay="autoplay" class="easyrtcMirror" id="selfVideo" muted="muted" volume="0" ></video>
+                                        </div>
+                                        <div class="callerDiv">
+                                            <video autoplay="autoplay" id="callerVideo"></video>
+                                        </div>
+                                        <img src='<?=url()?>/assets/img/sunny-suite.png' class='repVideoImg'>
+                                    </div>
+                                </div>         
+                            </div>
+                            <div class="chatting-section">
+                                <div id="msgContainer">
+                                    <div id="msgDiv" class="scrollbar-inner"></div> 
+                                </div>
+                            </div>    
+                            <div class="clr"></div>
+                            <div class="chatting-section">
+                                <div class="msgRow">
+                                    <div class="msgInput">  
+                                        <div class="form-group large">
+                                            <input type="text" class="form-control" id="inputMsg" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="msgBtn">    
+                                        <button type="button" id="btnSendMsg" class="btn btn-default btn-medium">Send</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clr"></div>
+                            <div class="chattingFloor">
+                                <div class="ctrlBtn">
+                                    <button type="button" id="btnCtrl" class="btn btn-default btn-medium">Control</button>
+                                    <!--<button type="button" id="videoMute" class="btn btn-default btn-medium">Mute Video</button>
+                                    <button type="button" id="audioMute" class="btn btn-default btn-medium">Mute Audio</button>-->
+                                    <button type="button" id="btnCloseStreet" class="btn btn-default btn-medium dpNone">Close Street</button>
+                                    <button type="button" id="btnTalkClose" class="btn btn-default btn-medium">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--Chatting window-->
+            </div>
+            <!-- end Map Canvas-->
+                <!--Featured-->
+                <section id="featured" class="block background-color-grey-dark equal-height">
+                    <div class="container">
+                        <header><h2>Featured</h2></header>
+                        <div class="row">
+                            <div class="col-md-3 col-sm-3">
+                                <div class="item featured">
+                                    <div class="image">
+                                        <div class="quick-view" id="1"><i class="fa fa-eye"></i><span>Quick View</span></div>
+                                        <a href="item-detail.html">
+                                            <div class="overlay">
+                                                <div class="inner">
+                                                    <div class="content">
+                                                        <h4>Description</h4>
+                                                        <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="item-specific">
+                                                <span title="Bedrooms"><img src="<?=url()?>/assets/img/bedrooms.png" alt="">2</span>
+                                                <span title="Bathrooms"><img src="<?=url()?>/assets/img/bathrooms.png" alt="">2</span>
+                                                <span title="Area"><img src="<?=url()?>/assets/img/area.png" alt="">240m<sup>2</sup></span>
+                                                <span title="Garages"><img src="<?=url()?>/assets/img/garages.png" alt="">1</span>
+                                            </div>
+                                            <div class="icon">
+                                                <i class="fa fa-thumbs-up"></i>
+                                            </div>
+                                            <img src="<?=url()?>/assets/img/items/1.jpg" alt="">
+                                        </a>
+                                    </div>
+                                    <div class="wrapper">
+                                        <a href="item-detail.html"><h3>Steak House Restaurant</h3></a>
+                                        <figure>63 Birch Street</figure>
+                                        <div class="info">
+                                            <div class="type">
+                                                <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/restaurant.png" alt=""></i>
+                                                <span>Restaurant</span>
+                                            </div>
+                                            <div class="rating" data-rating="4"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.item-->
+                            </div>
+                            <!--/.col-sm-4-->
+                            <div class="col-md-3 col-sm-3">
+                                <div class="item featured">
+                                    <div class="image">
+                                        <div class="quick-view"><i class="fa fa-eye"></i><span>Quick View</span></div>
+                                        <a href="item-detail.html">
+                                            <div class="overlay">
+                                                <div class="inner">
+                                                    <div class="content">
+                                                        <h4>Description</h4>
+                                                        <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <img src="<?=url()?>/assets/img/items/2.jpg" alt="">
+                                        </a>
+                                    </div>
+                                    <div class="wrapper">
+                                        <a href="item-detail.html"><h3>Benny’s Cafeteria</h3></a>
+                                        <figure>63 Birch Street</figure>
+                                        <div class="info">
+                                            <div class="type">
+                                                <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/cafetaria.png" alt=""></i>
+                                                <span>Cafeteria</span>
+                                            </div>
+                                            <div class="rating" data-rating="4"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.item-->
+                            </div>
+                            <!--/.col-sm-4-->
+                            <div class="col-md-3 col-sm-3">
+                                <div class="item featured">
+                                    <div class="image">
+                                        <div class="quick-view"><i class="fa fa-eye"></i><span>Quick View</span></div>
+                                        <a href="item-detail.html">
+                                            <div class="overlay">
+                                                <div class="inner">
+                                                    <div class="content">
+                                                        <h4>Description</h4>
+                                                        <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="item-specific">
+                                                <span>Daily menu from: $6</span>
+                                            </div>
+                                            <img src="<?=url()?>/assets/img/items/restaurant/9.jpg" alt="">
+                                        </a>
+                                    </div>
+                                    <div class="wrapper">
+                                        <a href="item-detail.html"><h3>Big Bamboo</h3></a>
+                                        <figure>4662 Bruce Street</figure>
+                                        <div class="info">
+                                            <div class="type">
+                                                <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/japanese-food.png" alt=""></i>
+                                                <span>Sushi</span>
+                                            </div>
+                                            <div class="rating" data-rating="3"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.item-->
+                            </div>
+                            <!--/.col-sm-4-->
+                            <div class="col-md-3 col-sm-3">
+                                <div class="item featured">
+                                    <div class="image">
+                                        <div class="quick-view"><i class="fa fa-eye"></i><span>Quick View</span></div>
+                                        <a href="item-detail.html">
+                                            <div class="overlay">
+                                                <div class="inner">
+                                                    <div class="content">
+                                                        <h4>Description</h4>
+                                                        <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="item-specific">
+                                                <span>Daily menu from: $6</span>
+                                            </div>
+                                            <img src="<?=url()?>/assets/img/items/restaurant/10.jpg" alt="">
+                                        </a>
+                                    </div>
+                                    <div class="wrapper">
+                                        <a href="item-detail.html"><h3>Sushi Wooshi Bar</h3></a>
+                                        <figure>357 Trainer Avenue</figure>
+                                        <div class="info">
+                                            <div class="type">
+                                                <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/fishchips.png" alt=""></i>
+                                                <span>Sushi Bar</span>
+                                            </div>
+                                            <div class="rating" data-rating="3"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- /.item-->
+                            </div>
+                            <!--/.col-sm-4-->
+                        </div>
+                        <!--/.row-->
+                    </div>
+                    <!--/.container-->
+                </section>
+                <!--end Featured-->
+
+                <!--Popular-->
+                <section id="popular" class="block background-color-white">
+                    <div class="container">
+                        <header><h2>Popular</h2></header>
+                        <div class="owl-carousel wide carousel">
+                            <div class="slide">
+                                <div class="inner">
+                                    <div class="image">
+                                        <div class="item-specific">
+                                            <div class="inner">
+                                                <div class="content">
+                                                    <dl>
+                                                        <dt>Bedrooms</dt>
+                                                        <dd>2</dd>
+                                                        <dt>Bathrooms</dt>
+                                                        <dd>2</dd>
+                                                        <dt>Area</dt>
+                                                        <dd>240m<sup>2</sup></dd>
+                                                        <dt>Garages</dt>
+                                                        <dd>1</dd>
+                                                        <dt>Build Year</dt>
+                                                        <dd>1990</dd>
+                                                    </dl>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <img src="<?=url()?>/assets/img/items/restaurant/8.jpg" alt="">
+                                    </div>
+                                    <div class="wrapper">
+                                        <a href="item-detail.html"><h3>Magma Bar and Grill</h3></a>
+                                        <figure>
+                                            <i class="fa fa-map-marker"></i>
+                                            <span>970 Chapel Street, Rosenberg, TX 77471</span>
+                                        </figure>
+                                        <div class="info">
+                                            <div class="rating" data-rating="4">
+                                                <aside class="reviews">6 reviews</aside>
+                                            </div>
+                                            <div class="type">
+                                                <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/restaurant.png" alt=""></i>
+                                                <span>Restaurant</span>
+                                            </div>
+                                        </div>
+                                        <!--/.info-->
+                                        <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa, viverra interdum eros ut,
+                                            imperdiet pellentesque mauris. Proin sit amet scelerisque risus. Donec semper semper erat ut mollis.
+                                            Curabitur suscipit, justo eu dignissim lacinia, ante sapien pharetra dui...
+                                        </p>
+                                        <a href="item-detail.html" class="read-more icon">Read More</a>
+                                    </div>
+                                    <!--/.wrapper-->
+                                </div>
+                                <!--/.inner-->
+                            </div>
+                            <!--/.slide-->
+                            <div class="slide">
+                                <div class="inner">
+                                    <div class="image">
+                                        <div class="item-specific">
+                                            <div class="inner">
+                                                <div class="content">
+                                                    <dl>
+                                                        <dt>Bedrooms</dt>
+                                                        <dd>2</dd>
+                                                        <dt>Bathrooms</dt>
+                                                        <dd>2</dd>
+                                                        <dt>Area</dt>
+                                                        <dd>240m<sup>2</sup></dd>
+                                                        <dt>Garages</dt>
+                                                        <dd>1</dd>
+                                                        <dt>Build Year</dt>
+                                                        <dd>1990</dd>
+                                                    </dl>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <img src="<?=url()?>/assets/img/items/restaurant/9.jpg" alt="">
+                                    </div>
+                                    <div class="wrapper">
+                                        <a href="item-detail.html"><h3>Saguaro Tavern</h3></a>
+                                        <figure>
+                                            <i class="fa fa-map-marker"></i>
+                                            <span>2476 Whispering Pines Circle</span>
+                                        </figure>
+                                        <div class="info">
+                                            <div class="rating" data-rating="4">
+                                                <aside class="reviews">6 reviews</aside>
+                                            </div>
+                                            <div class="type">
+                                                <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/restaurant.png" alt=""></i>
+                                                <span>Restaurant</span>
+                                            </div>
+                                        </div>
+                                        <!--/.info-->
+                                        <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa, viverra interdum eros ut,
+                                            imperdiet pellentesque mauris. Proin sit amet scelerisque risus. Donec semper semper erat ut mollis.
+                                            Curabitur suscipit, justo eu dignissim lacinia, ante sapien pharetra dui...
+                                        </p>
+                                        <a href="item-detail.html" class="read-more icon">Read More</a>
+                                    </div>
+                                    <!--/.wrapper-->
+                                </div>
+                                <!--/.inner-->
+                            </div>
+                            <!--/.slide-->
+                        </div>
+                        <!--/.owl-carousel-->
+                    </div>
+                    <!--/.container-->
+                </section>
+                <!--end Popular-->
+                <section class="block equal-height">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md-9">
+                                <header><h2>Popular Listings</h2></header>
+                                <div class="row">
+                                    <div class="col-md-4 col-sm-4">
+                                        <div class="item">
+                                            <div class="image">
+                                                <div class="quick-view"><i class="fa fa-eye"></i><span>Quick View</span></div>
+                                                <a href="item-detail.html">
+                                                    <div class="overlay">
+                                                        <div class="inner">
+                                                            <div class="content">
+                                                                <h4>Description</h4>
+                                                                <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="item-specific">
+                                                        <span title="Bedrooms"><img src="<?=url()?>/assets/img/bedrooms.png" alt="">2</span>
+                                                        <span title="Bathrooms"><img src="<?=url()?>/assets/img/bathrooms.png" alt="">2</span>
+                                                        <span title="Area"><img src="<?=url()?>/assets/img/area.png" alt="">240m<sup>2</sup></span>
+                                                        <span title="Garages"><img src="<?=url()?>/assets/img/garages.png" alt="">1</span>
+                                                    </div>
+                                                    <div class="icon">
+                                                        <i class="fa fa-thumbs-up"></i>
+                                                    </div>
+                                                    <img src="<?=url()?>/assets/img/items/1.jpg" alt="">
+                                                </a>
+                                            </div>
+                                            <div class="wrapper">
+                                                <a href="item-detail.html"><h3>Steak House Restaurant</h3></a>
+                                                <figure>63 Birch Street</figure>
+                                                <div class="info">
+                                                    <div class="type">
+                                                        <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/restaurant.png" alt=""></i>
+                                                        <span>Restaurant</span>
+                                                    </div>
+                                                    <div class="rating" data-rating="4"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- /.item-->
+                                    </div>
+                                    <!--/.col-sm-4-->
+                                    <div class="col-md-4 col-sm-4">
+                                        <div class="item">
+                                            <div class="image">
+                                                <div class="quick-view"><i class="fa fa-eye"></i><span>Quick View</span></div>
+                                                <a href="item-detail.html">
+                                                    <div class="overlay">
+                                                        <div class="inner">
+                                                            <div class="content">
+                                                                <h4>Description</h4>
+                                                                <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <img src="<?=url()?>/assets/img/items/2.jpg" alt="">
+                                                </a>
+                                            </div>
+                                            <div class="wrapper">
+                                                <a href="item-detail.html"><h3>Benny’s Cafeteria</h3></a>
+                                                <figure>63 Birch Street</figure>
+                                                <div class="info">
+                                                    <div class="type">
+                                                        <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/cafetaria.png" alt=""></i>
+                                                        <span>Cafeteria</span>
+                                                    </div>
+                                                    <div class="rating" data-rating="4"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- /.item-->
+                                    </div>
+                                    <!--/.col-sm-4-->
+                                    <div class="col-md-4 col-sm-4">
+                                        <div class="item">
+                                            <div class="image">
+                                                <div class="quick-view"><i class="fa fa-eye"></i><span>Quick View</span></div>
+                                                <a href="item-detail.html">
+                                                    <div class="overlay">
+                                                        <div class="inner">
+                                                            <div class="content">
+                                                                <h4>Description</h4>
+                                                                <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="item-specific">
+                                                        <span>Daily menu from: $6</span>
+                                                    </div>
+                                                    <img src="<?=url()?>/assets/img/items/restaurant/9.jpg" alt="">
+                                                </a>
+                                            </div>
+                                            <div class="wrapper">
+                                                <a href="item-detail.html"><h3>Big Bamboo</h3></a>
+                                                <figure>4662 Bruce Street</figure>
+                                                <div class="info">
+                                                    <div class="type">
+                                                        <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/japanese-food.png" alt=""></i>
+                                                        <span>Sushi</span>
+                                                    </div>
+                                                    <div class="rating" data-rating="3"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- /.item-->
+                                    </div>
+                                    <!--/.col-sm-4-->
+                                </div>
+                                <!--/.row-->
+
+                                <!--Recent-->
+                                <section id="recent">
+                                    <header><h2>Recent</h2></header>
+                                        <div class="item list">
+                                        <div class="image">
+                                            <div class="quick-view"><i class="fa fa-eye"></i><span>Quick View</span></div>
+                                            <a href="item-detail.html">
+                                                <div class="overlay">
+                                                    <div class="inner">
+                                                        <div class="content">
+                                                            <h4>Description</h4>
+                                                            <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="item-specific">
+                                                    <span title="Bedrooms"><img src="<?=url()?>/assets/img/bedrooms.png" alt="">2</span>
+                                                    <span title="Bathrooms"><img src="<?=url()?>/assets/img/bathrooms.png" alt="">2</span>
+                                                    <span title="Area"><img src="<?=url()?>/assets/img/area.png" alt="">240m<sup>2</sup></span>
+                                                    <span title="Garages"><img src="<?=url()?>/assets/img/garages.png" alt="">1</span>
+                                                </div>
+                                                <div class="icon">
+                                                    <i class="fa fa-thumbs-up"></i>
+                                                </div>
+                                                <img src="<?=url()?>/assets/img/items/1.jpg" alt="">
+                                            </a>
+                                        </div>
+                                        <div class="wrapper">
+                                            <a href="item-detail.html"><h3>Cash Cow Restaurante</h3></a>
+                                            <figure>63 Birch Street</figure>
+                                            <div class="info">
+                                                <div class="type">
+                                                    <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/restaurant.png" alt=""></i>
+                                                    <span>Restaurant</span>
+                                                </div>
+                                                <div class="rating" data-rating="4"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /.item-->
+                                    <div class="item list">
+                                        <div class="image">
+                                            <div class="quick-view"><i class="fa fa-eye"></i><span>Quick View</span></div>
+                                            <a href="item-detail.html">
+                                                <div class="overlay">
+                                                    <div class="inner">
+                                                        <div class="content">
+                                                            <h4>Description</h4>
+                                                            <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <img src="<?=url()?>/assets/img/items/2.jpg" alt="">
+                                            </a>
+                                        </div>
+                                        <div class="wrapper">
+                                            <a href="item-detail.html"><h3>Benny’s Cafeteria</h3></a>
+                                            <figure>63 Birch Street</figure>
+                                            <div class="info">
+                                                <div class="type">
+                                                    <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/cafetaria.png" alt=""></i>
+                                                    <span>Cafeteria</span>
+                                                </div>
+                                                <div class="rating" data-rating="4"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /.item-->
+                                    <div class="item list">
+                                        <div class="image">
+                                            <div class="quick-view"><i class="fa fa-eye"></i><span>Quick View</span></div>
+                                            <a href="item-detail.html">
+                                                <div class="overlay">
+                                                    <div class="inner">
+                                                        <div class="content">
+                                                            <h4>Description</h4>
+                                                            <p>Curabitur odio nibh, luctus non pulvinar a, ultricies ac diam. Donec neque massa</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="item-specific">
+                                                    <span>Daily menu from: $6</span>
+                                                </div>
+                                                <img src="<?=url()?>/assets/img/items/restaurant/9.jpg" alt="">
+                                            </a>
+                                        </div>
+                                        <div class="wrapper">
+                                            <a href="item-detail.html"><h3>Big Bamboo</h3></a>
+                                            <figure>4662 Bruce Street</figure>
+                                            <div class="info">
+                                                <div class="type">
+                                                    <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/japanese-food.png" alt=""></i>
+                                                    <span>Sushi</span>
+                                                </div>
+                                                <div class="rating" data-rating="3"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /.item-->
+                                </section>
+                                <!--end Recent-->
+                                <!--Categories-->
+                                <section id="categories">
+                                    <header><h2>Categories</h2></header>
+                                    <ul class="categories">
+                                        <li><a href="#">Arts & Humanities</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">Photography</a></li>
+                                                <li><a href="#">History</a></li>
+                                                <li><a href="#">Literature</a></li>
+                                            </ul><!--/.sub-category-->
+                                        </li>
+                                        <li><a href="#">Business & Economy</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">B2B</a></li>
+                                                <li><a href="#">Finance</a></li>
+                                                <li><a href="#">Shopping</a></li>
+                                                <li><a href="#">Jobs</a></li>
+                                            </ul><!--/.sub-category-->
+                                        </li>
+                                        <li><a href="#">Computer & Internet</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">Hardware</a></li>
+                                                <li><a href="#">Software</a></li>
+                                                <li><a href="#">Web</a></li>
+                                                <li><a href="#">Games</a></li>
+                                            </ul><!--/.sub-category-->
+                                        </li>
+                                        <li><a href="#">Education</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">Colleges</a></li>
+                                                <li><a href="#">K-12</a></li>
+                                                <li><a href="#">Distance Learning</a></li>
+                                            </ul><!--/.sub-category-->
+                                        </li>
+                                        <li><a href="#">Entertainment</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">Movies</a></li>
+                                                <li><a href="#">TV Shows</a></li>
+                                                <li><a href="#">Music</a></li>
+                                                <li><a href="#">Humor</a></li>
+                                            </ul><!--/.sub-category-->
+                                        </li>
+                                        <li><a href="#">Government</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">Elections</a></li>
+                                                <li><a href="#">Military</a></li>
+                                                <li><a href="#">Law</a></li>
+                                                <li><a href="#">Taxes</a></li>
+                                            </ul><!--/.sub-category-->
+                                        </li>
+                                        <li><a href="">Health</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">Disease</a></li>
+                                                <li><a href="#">Drugs</a></li>
+                                                <li><a href="#">Fitness</a></li>
+                                                <li><a href="#">Nutrition</a></li>
+                                            </ul><!--/.sub-category-->
+                                        </li>
+                                        <li><a href="#">News & Media</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">Newspapers</a></li>
+                                                <li><a href="#">Radio</a></li>
+                                                <li><a href="#">Weather</a></li>
+                                                <li><a href="#">Blogs</a></li>
+                                            </ul><!--/.sub-category-->
+                                        </li>
+                                        <li><a href="#">Recreation & Sports</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">Sports</a></li>
+                                                <li><a href="#">Travel</a></li>
+                                                <li><a href="#">Autos</a></li>
+                                                <li><a href="#">Outdoors</a></li>
+                                            </ul><!--/.sub-category-->
+                                        </li>
+                                        <li><a href="#">Reference</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">Phone Numbers</a></li>
+                                                <li><a href="#">Dictionaries</a></li>
+                                                <li><a href="#">Quotes</a></li>
+                                            </ul><!--/.sub-category-->
+                                        </li>
+                                        <li><a href="#">Science</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">Animals</a></li>
+                                                <li><a href="#">Astronomy</a></li>
+                                                <li><a href="#">Earth Science</a></li>
+                                            </ul><!--/.sub-category-->
+                                        </li>
+                                        <li><a href="#">Social Science</a>
+                                            <ul class="sub-category">
+                                                <li><a href="#">Languages</a></li>
+                                                <li><a href="#">Archaeology</a></li>
+                                                <li><a href="#">Psychology</a></li>
+                                            </ul>
+                                            <!--/.sub-category-->
+                                        </li>
+                                    </ul>
+                                    <!--/.categories-->
+                                </section>
+                                <!--end Categories-->
+                            </div>
+                            <!--/.col-md-9-->
+                            <div class="col-md-3">
+                                <aside id="sidebar">
+                                    <section>
+                                        <header><h2>New Places</h2></header>
+                                        <a href="item-detail.html" class="item-horizontal small">
+                                            <h3>Cash Cow Restaurante</h3>
+                                            <figure>63 Birch Street</figure>
+                                            <div class="wrapper">
+                                                <div class="image"><img src="<?=url()?>/assets/img/items/1.jpg" alt=""></div>
+                                                <div class="info">
+                                                    <div class="type">
+                                                        <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/restaurant.png" alt=""></i>
+                                                        <span>Restaurant</span>
+                                                    </div>
+                                                    <div class="rating" data-rating="4"></div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        <!--/.item-horizontal small-->
+                                        <a href="item-detail.html" class="item-horizontal small">
+                                            <h3>Blue Chilli</h3>
+                                            <figure>2476 Whispering Pines Circle</figure>
+                                            <div class="wrapper">
+                                                <div class="image"><img src="<?=url()?>/assets/img/items/2.jpg" alt=""></div>
+                                                <div class="info">
+                                                    <div class="type">
+                                                        <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/restaurant.png" alt=""></i>
+                                                        <span>Restaurant</span>
+                                                    </div>
+                                                    <div class="rating" data-rating="3"></div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        <!--/.item-horizontal small-->
+                                        <a href="item-detail.html" class="item-horizontal small">
+                                            <h3>Eddie’s Fast Food</h3>
+                                            <figure>4365 Bruce Street</figure>
+                                            <div class="wrapper">
+                                                <div class="image"><img src="<?=url()?>/assets/img/items/3.jpg" alt=""></div>
+                                                <div class="info">
+                                                    <div class="type">
+                                                        <i><img src="<?=url()?>/assets/icons/restaurants-bars/restaurants/restaurant.png" alt=""></i>
+                                                        <span>Restaurant</span>
+                                                    </div>
+                                                    <div class="rating" data-rating="5"></div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        <!--/.item-horizontal small-->
+                                    </section>
+                                    <section>
+                                        <header><h2>Categories</h2></header>
+                                        <ul class="bullets">
+                                            <li><a href="#" >Restaurant</a></li>
+                                            <li><a href="#" >Steak House & Grill</a></li>
+                                            <li><a href="#" >Fast Food</a></li>
+                                            <li><a href="#" >Breakfast</a></li>
+                                            <li><a href="#" >Winery</a></li>
+                                            <li><a href="#" >Bar & Lounge</a></li>
+                                            <li><a href="#" >Pub</a></li>
+                                        </ul>
+                                    </section>
+                                    <section>
+                                        <header><h2>Events</h2></header>
+                                        <div class="form-group">
+                                            <select class="framed" name="events">
+                                                <option value="">Select Your City</option>
+                                                <option value="1">London</option>
+                                                <option value="2">New York</option>
+                                                <option value="3">Barcelona</option>
+                                                <option value="4">Moscow</option>
+                                                <option value="5">Tokyo</option>
+                                            </select>
+                                        </div>
+                                        <!-- /.form-group -->
+                                    </section>
+                                </aside>
+                                <!-- /#sidebar-->
+                            </div>
+                            <!-- /.col-md-3-->
+                        </div>
+                        <!--/.row-->
+                    </div>
+                </section>
+
+                <!--Banner-->
+                <section>
+                    <div class="container">
+                        <div class="block">
+                            <a href="#"><img src="<?=url()?>/assets/img/ad-banner.png" alt=""></a>
+                        </div>
+                    </div>
+                </section>
+                <!--end Banner-->
+                <!--Subscribe-->
+                <section id="subscribe" class="block">
+                    <div class="container">
+                        <header><h2>Subscribe</h2></header>
+                        <form class="subscribe form-inline border-less-inputs" action="?" method="post" role="form">
+                            <div class="input-group">
+                                <input type="email" class="form-control" id="subscribe_email" placeholder="Enter your email and get the newest updates">
+                                <span class="input-group-btn">
+                                    <button type="submit" class="btn btn-default btn-large">Subscribe<i class="fa fa-angle-right"></i></button>
+                                </span>
+                            </div>
+                        </form>
+                        <!--/.subscribe-->
+                    </div>
+                    <!--/.container-->
+                </section>
+                <!--end Subscribe-->
+                <!--Partners-->
+                <section id="partners" class="block">
+                    <div class="container">
+                        <header><h2>Partners</h2></header>
+                        <div class="logos">
+                            <div class="logo"><a href="#"><img src="<?=url()?>/assets/img/logo-partner-01.png" alt=""></a></div>
+                            <div class="logo"><a href="#"><img src="<?=url()?>/assets/img/logo-partner-02.png" alt=""></a></div>
+                            <div class="logo"><a href="#"><img src="<?=url()?>/assets/img/logo-partner-03.png" alt=""></a></div>
+                            <div class="logo"><a href="#"><img src="<?=url()?>/assets/img/logo-partner-04.png" alt=""></a></div>
+                            <div class="logo"><a href="#"><img src="<?=url()?>/assets/img/logo-partner-05.png" alt=""></a></div>
+                        </div>
+                    </div>
+                    <!--/.container-->
+                </section>
+                <!--end Partners-->
+            </div>
+            <!-- end Page Content-->
+        </div>
+        <!-- end Page Canvas-->
+        <?php include 'bottom.php'; ?>
+    </div>
+    <!-- end Inner Wrapper -->
+</div>
+<!-- end Outer Wrapper-->
+
+<div class="pinPop"></div>
+<script type="text/javascript" src="<?=url()?>/assets/js/before.load.js"></script>
+<script type="text/javascript" src="<?=url()?>/assets/js/infobox.js"></script>
+<script type="text/javascript" src="<?=url()?>/assets/js/richmarker-compiled.js"></script>
+<script type="text/javascript" src="<?=url()?>/assets/js/markerclusterer.js"></script>
+<script type="text/javascript" src="<?=url()?>/assets/js/custom.js"></script>
+<script type="text/javascript" src="<?=url()?>/assets/js/maps.js"></script>
+<script type="text/javascript" src="<?=url()?>/assets/js/leaflet.js"></script>
+
+<!--[if lte IE 9]>
+<script type="text/javascript" src="<?=url()?>/assets/js/ie-scripts.js"></script>
+<![endif]-->
+
+
+
+<script>
+var $ = jQuery.noConflict();
+$(function(){    
+    
+    // load map pins then check those pins belong to map boundary
+    var onLoadMap = function(id, keyword, category){
+
+        var param = {'id': id, 'keyword': keyword, 'category': category};
+
+        // if direct access
+        var lat = isNull('<?=$lat?>',_latitude);
+        var lng = isNull('<?=$lng?>',_longitude);
+
+        $.ajax({
+            type: "GET",
+            url: base_url+'/callPins',
+            data: param,
+            success: function( data ) {
+                createHomepageGoogleMap(lat,lng, data);
+            }
+        });
+
+    }
+
+    // pin category
+    var onLoadCategory = function(){
+        
+        $.ajax({
+            type: "GET",
+            url: base_url+'/callCdListByGrp',
+            data: {'connectCd': 'category'},
+            success: function( data ) {
+                $.each(data,function(i,d){
+                    var cls = (d.level==3)?'sub-category':'';
+                    var item = "<option value='"+d.cd+"' class='"+ cls + "'>"+d.cd_nm+"</option>";
+                    $("#mapCategory").append(item);
+                    $("#mapCategory").selectpicker('refresh');
+                });
+            }
+        });
+    }
+
+    // onload
+    onLoadMap();
+    onLoadCategory();
+
+    // Set if language is RTL and load Owl Carousel
+    var rtl = false; // Use RTL
+    initializeOwl(rtl);
+
+    // when searching, recommend keywords right underneath of search input
+    autoComplete();
+    
+    // get invite message on some other pages.
+    if(_chat){ // true
+        $('.map .toggle-navigation').trigger('click');  // close
+        $('.map .toggle-navigation').trigger('click');  // open 
+    }
+
+    // check member or not
+    var checkMember = function(){
+        if(!'<?=Auth::check()?>'){
+            location.href= base_url + '/auth/login';            
+        }
+    };
+
+
+    // Events
+    // map 검색시 현재 리스트업되어있는 map상의 것들중에서 검색.
+    $("#searchBtn").off('click').on('click',function(){
+        onLoadMap('',$("#keyword").val(), $("#mapCategory").val() );
+    });
+
+    $("#keyword").keypress(function(event) {
+        if(event.which == 13) {
+            $("#searchBtn").trigger('click');
+        }
+    });
+
+    window.onLoadMap = onLoadMap;
+    window.checkMember = checkMember;
+});
+
+</script>
+
+<!--[if lte IE 9]>
+<script type="text/javascript" src="<?=url()?>/assets/js/ie-scripts.js"></script>
+<![endif]-->
+
+
+</body>
+</html>
