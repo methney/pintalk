@@ -21,4 +21,5 @@ Pintalk is built by Node.js, Socket.io, Laravel and Javascript basically.
 ## Build by open-source
 There are hundreads of thousands of good opensources out there nowadays. Pintalk also uses good opensource which is about Webrtc(real-time chatting). This is the key technical resource. We are using easyrtc(https://easyrtc.com/) in the first place. 
 
+I'm still organizing sources which I built, I've been focused on making functions first. Please consider it!
 
