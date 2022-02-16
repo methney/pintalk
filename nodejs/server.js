@@ -1,4 +1,5 @@
 const express = require("express");
+const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 const morgan = require('morgan');
@@ -10,7 +11,7 @@ const fs = require("fs");
 const dotenv = require('dotenv');
 const group_leader = [];
 const server_user = {}; 
-const app = express();
+
 
 const webServer = server.listen(8890, function(){
     console.log('Connected to : 8890');
@@ -134,3 +135,5 @@ function getUserRoom(room_id) {
     }
     return user;
 }
+
+module.exports = isNullChk;
