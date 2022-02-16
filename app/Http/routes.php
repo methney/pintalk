@@ -102,20 +102,11 @@ Route::get('indexGuestWithKey/{key}', array('as'=>'indexGuestWithKey', function(
 }));
 
 
-/*
-Route::get('pinGridList', function(){
-    return View::make('pin/pinGridList');
-});
-*/
 Route::get('pinList', function(){
     return View::make('pin/pinList');
 });
 Route::get('pinDetail', 'PinController@selectPinForDetail');
-/*
-Route::get('pinDetail', function(){
-    return View::make('pin/pinDetail');
-});
-*/
+
 // review
 Route::post('addReview','PinController@insertReview');
 // floorAlert profile
